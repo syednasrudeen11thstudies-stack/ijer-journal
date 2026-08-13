@@ -1,69 +1,199 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const latestArticles = [
+  {
+    type: "Original Research",
+    title:
+      "Phytochemical Profiling of Selected Electro-Homoeopathic Medicinal Plants",
+    authors: "A. Researcher, B. Scholar, C. Investigator",
+  },
+  {
+    type: "Review Article",
+    title:
+      "Current Perspectives on Plant-Derived Bioactive Compounds in Electro-Homoeopathy",
+    authors: "D. Author, E. Scientist",
+  },
+  {
+    type: "Experimental Study",
+    title:
+      "In-Vitro Evaluation of Selected Botanical Extracts Against Microbial Pathogens",
+    authors: "F. Researcher, G. Scholar",
+  },
+];
+
+const categories = [
+  "Electro-Homoeopathy Research",
+  "Phytochemistry",
+  "Medicinal Plants",
+  "Pharmacognosy",
+  "Clinical Research",
+  "Experimental Studies",
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+      <section className="hero-section">
+        <div className="site-container hero-grid">
+          <div className="hero-content">
+            <span className="eyebrow">Open Access Academic Journal</span>
+
+            <h1>
+              Advancing Scientific Research in
+              <span> Electro-Homoeopathy</span>
+            </h1>
+
+            <p>
+              A scholarly platform dedicated to publishing research,
+              experimental studies, clinical observations, phytochemical
+              investigations, reviews, and scientific discussions related to
+              Electro-Homoeopathy and medicinal plants.
+            </p>
+
+            <div className="hero-actions">
+              <Link href="/current-issue" className="primary-button">
+                Explore Current Issue
+              </Link>
+
+              <Link href="/submit-manuscript" className="secondary-button">
+                Submit Manuscript
+              </Link>
+            </div>
+          </div>
+
+          <div className="hero-panel">
+            <span className="panel-label">Current Issue</span>
+
+            <h2>Volume 1 • Issue 1</h2>
+
+            <p>
+              Explore peer-reviewed research articles, reviews, case reports,
+              and experimental studies.
+            </p>
+
+            <div className="issue-meta">
+              <div>
+                <strong>2026</strong>
+                <span>Publication Year</span>
+              </div>
+
+              <div>
+                <strong>Open Access</strong>
+                <span>Full-text articles</span>
+              </div>
+            </div>
+
+            <Link href="/current-issue" className="text-link">
+              View Current Issue →
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="section">
+        <div className="site-container">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Research Areas</span>
+              <h2>Explore Journal Categories</h2>
+            </div>
+
+            <p>
+              Discover research across scientific disciplines connected with
+              Electro-Homoeopathy, medicinal plants, and experimental
+              investigation.
+            </p>
+          </div>
+
+          <div className="category-grid">
+            {categories.map((category) => (
+              <Link
+                href="/categories"
+                key={category}
+                className="category-card"
+              >
+                <span>{category}</span>
+                <span className="arrow">→</span>
+              </Link>
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="section soft-section">
+        <div className="site-container">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Latest Publications</span>
+              <h2>Recently Published Articles</h2>
+            </div>
+
+            <Link href="/archives" className="text-link">
+              Browse all articles →
+            </Link>
+          </div>
+
+          <div className="articles-list">
+            {latestArticles.map((article) => (
+              <article key={article.title} className="article-card">
+                <div>
+                  <span className="article-type">{article.type}</span>
+
+                  <h3>{article.title}</h3>
+
+                  <p>{article.authors}</p>
+                </div>
+
+                <Link href="/current-issue" className="article-link">
+                  Read Article →
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="site-container two-column-section">
+          <div>
+            <span className="eyebrow">For Authors</span>
+
+            <h2>Publish Your Research With Us</h2>
+
+            <p className="large-copy">
+              Authors can submit original research, review articles,
+              experimental studies, case reports, short communications, and
+              scholarly discussions for editorial consideration.
+            </p>
+
+            <Link href="/author-guidelines" className="primary-button">
+              View Author Guidelines
+            </Link>
+          </div>
+
+          <div className="resource-panel">
+            <Link href="/submit-manuscript">
+              <span>01</span>
+              Submit Manuscript
+            </Link>
+
+            <Link href="/peer-review-policy">
+              <span>02</span>
+              Peer Review Process
+            </Link>
+
+            <Link href="/publication-ethics">
+              <span>03</span>
+              Publication Ethics
+            </Link>
+
+            <Link href="/open-access-policy">
+              <span>04</span>
+              Open Access Policy
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
