@@ -64,7 +64,7 @@ export default function Home() {
           <div className="hero-panel">
             <span className="panel-label">Current Issue</span>
 
-            <h2>Volume 1 • Issue 1</h2>
+            <h2>Volume 1 Ã¢â‚¬Â¢ Issue 1</h2>
 
             <p>
               Explore peer-reviewed research articles, reviews, case reports,
@@ -84,7 +84,7 @@ export default function Home() {
             </div>
 
             <Link href="/current-issue" className="text-link">
-              View Current Issue →
+              View Current Issue Ã¢â€ â€™
             </Link>
           </div>
         </div>
@@ -108,12 +108,12 @@ export default function Home() {
           <div className="category-grid">
             {categories.map((category) => (
               <Link
-                href="/categories"
+                href="/aims-and-scope"
                 key={category}
                 className="category-card"
               >
                 <span>{category}</span>
-                <span className="arrow">→</span>
+                <span className="arrow">&rarr;</span>
               </Link>
             ))}
           </div>
@@ -129,7 +129,7 @@ export default function Home() {
             </div>
 
             <Link href="/archives" className="text-link">
-              Browse all articles →
+              Browse all articles Ã¢â€ â€™
             </Link>
           </div>
 
@@ -145,7 +145,7 @@ export default function Home() {
                 </div>
 
                 <Link href="/current-issue" className="article-link">
-                  Read Article →
+                  Read Article Ã¢â€ â€™
                 </Link>
               </article>
             ))}
