@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import Link from "next/link";
 
 const articleTypes = [
@@ -36,9 +37,22 @@ export default function SubmitManuscriptPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<SubmissionResult | null>(null);
+  const [manuscriptFile, setManuscriptFile] = useState<File | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!manuscriptFile) {
+      setError("Please select your manuscript file before submitting.");
+      return;
+    }
+
+    const selectedManuscriptFile: File = manuscriptFile;
+
+    if (selectedManuscriptFile.size > 20 * 1024 * 1024) {
+      setError("Manuscript file must be 20 MB or smaller.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -46,7 +60,34 @@ export default function SubmitManuscriptPage() {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
+    let manuscriptFileUrl = "";
+
+    try {
+      const uploadedFile = await upload(
+        `manuscripts/${Date.now()}-${selectedManuscriptFile.name}`,
+        selectedManuscriptFile,
+        {
+          access: "private",
+          handleUploadUrl: "/api/manuscripts/upload",
+        },
+      );
+
+      manuscriptFileUrl = uploadedFile.url;
+    } catch (uploadError) {
+      console.error(uploadError);
+
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload manuscript file.",
+      );
+
+      setSubmitting(false);
+      return;
+    }
+
     const payload = {
+      manuscriptFileUrl,
       title: String(formData.get("title") || ""),
       articleType: String(formData.get("articleType") || ""),
       subjectArea: String(formData.get("subjectArea") || ""),
@@ -497,23 +538,55 @@ export default function SubmitManuscriptPage() {
             </FormSection>
 
             <FormSection
-              number="04"
-              title="Manuscript File"
-              description="Document upload will be connected in the next stage."
-            >
-              <div className="file-coming-soon">
-                <strong>
-                  Manuscript File Upload
-                </strong>
+                number="04"
+                title="Manuscript File"
+                description="Upload the complete manuscript document for editorial review."
+              >
+                <div className="file-coming-soon">
+                  <strong>Upload Manuscript *</strong>
 
-                <p>
-                  Your submission details are now saved to
-                  the IJER database. The DOC/DOCX/PDF upload
-                  system will be connected next so the actual
-                  manuscript can also be securely received.
-                </p>
-              </div>
-            </FormSection>
+                  <p>
+                    Accepted formats: PDF, DOC and DOCX. Maximum file size: 20 MB.
+                  </p>
+
+                  <input
+                    type="file"
+                    name="manuscriptFile"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    required
+                    onChange={(event) => {
+                      setManuscriptFile(event.target.files?.[0] || null);
+                      setError("");
+                    }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      marginTop: "20px",
+                      padding: "20px",
+                      background: "#ffffff",
+                      border: "2px dashed #9dbdaf",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                    }}
+                  />
+
+                  {manuscriptFile && (
+                    <div
+                      style={{
+                        marginTop: "16px",
+                        padding: "14px 18px",
+                        background: "#eaf6ef",
+                        borderRadius: "10px",
+                        color: "#0b6245",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Selected file: {manuscriptFile.name}
+                    </div>
+                  )}
+                </div>
+              </FormSection>
 
             <FormSection
               number="05"

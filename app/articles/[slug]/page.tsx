@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import ArticleStyles from "./ArticleStyles";
+
+export const dynamic = "force-dynamic";
 
 type ArticlePageProps = {
   params: Promise<{
@@ -6,457 +12,715 @@ type ArticlePageProps = {
   }>;
 };
 
+export async function generateMetadata({
+  params,
+}: ArticlePageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  const article = await prisma.article.findUnique({
+    where: {
+      slug,
+    },
+
+    include: {
+      issue: true,
+    },
+  });
+
+  if (!article || article.status !== "PUBLISHED") {
+    return {
+      title: "Article Not Found",
+
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  const articleUrl =
+    `${siteUrl}/articles/${article.slug}`;
+
+  const description =
+    article.abstractText.length > 160
+      ? `${article.abstractText.slice(0, 157)}...`
+      : article.abstractText;
+
+  const keywords = article.keywords
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+
+  const authors = article.authors
+    .split(/\n|;/)
+    .map((author) => author.trim())
+    .filter(Boolean);
+
+  return {
+    title: article.title,
+
+    description,
+
+    keywords,
+
+    authors: authors.map((name) => ({
+      name,
+    })),
+
+    alternates: {
+      canonical: articleUrl,
+    },
+
+    openGraph: {
+      type: "article",
+      url: articleUrl,
+      title: article.title,
+      description,
+
+      siteName:
+        "International Journal of Electro-Homoeopathy & Research",
+
+      publishedTime:
+        article.publishedDate?.toISOString(),
+
+      modifiedTime:
+        article.updatedAt.toISOString(),
+
+      authors,
+    },
+
+    twitter: {
+      card: "summary",
+      title: article.title,
+      description,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-snippet": -1,
+        "max-image-preview": "large",
+        "max-video-preview": -1,
+      },
+    },
+
+    other: {
+      citation_title:
+        article.title,
+
+      citation_author:
+        authors,
+
+      citation_journal_title:
+        "International Journal of Electro-Homoeopathy & Research",
+
+      ...(article.issue
+        ? {
+            citation_volume:
+              String(article.issue.volumeNumber),
+
+            citation_issue:
+              String(article.issue.issueNumber),
+          }
+        : {}),
+
+      ...(article.publishedDate
+        ? {
+            citation_publication_date:
+              article.publishedDate
+                .toISOString()
+                .split("T")[0],
+          }
+        : article.issue?.publicationDate
+          ? {
+              citation_publication_date:
+                article.issue.publicationDate
+                  .toISOString()
+                  .split("T")[0],
+            }
+          : {}),
+
+      ...(article.startPage
+        ? {
+            citation_firstpage:
+              article.startPage,
+          }
+        : {}),
+
+      ...(article.endPage
+        ? {
+            citation_lastpage:
+              article.endPage,
+          }
+        : {}),
+
+      ...(article.doi
+        ? {
+            citation_doi:
+              article.doi,
+          }
+        : {}),
+
+      ...(article.issn
+        ? {
+            citation_issn:
+              article.issn,
+          }
+        : {}),
+
+      ...(article.pdfUrl
+        ? {
+            citation_pdf_url:
+              article.pdfUrl,
+          }
+        : {}),
+
+      citation_abstract:
+        article.abstractText,
+
+      citation_keywords:
+        article.keywords,
+    },
+  };
+}
 export default async function ArticlePage({
   params,
 }: ArticlePageProps) {
   const { slug } = await params;
 
-  const article = {
-    type: "Original Research",
-    title:
-      "Phytochemical Profiling of Selected Medicinal Plants Used in Electro-Homoeopathy",
-    authors: [
-      "A. Researcher",
-      "B. Scholar",
-      "C. Investigator",
-    ],
-    affiliations: [
-      "Department of Medicinal Plant Research",
-      "International Journal of Electro-Homoeopathy & Research",
-    ],
-    volume: "Volume 1",
-    issue: "Issue 1",
-    year: "2026",
-    pages: "01–10",
-    doi: "To be assigned",
-    received: "To be updated",
-    accepted: "To be updated",
-    published: "To be updated",
+  const article = await prisma.article.findUnique({
+    where: {
+      slug,
+    },
+
+    include: {
+      issue: true,
+    },
+  });
+
+  if (!article || article.status !== "PUBLISHED") {
+    notFound();
+  }
+
+  const keywords = article.keywords
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+
+  const pageRange =
+    article.startPage && article.endPage
+      ? `${article.startPage}-${article.endPage}`
+      : article.startPage || article.endPage || null;
+
+  const citation = [
+    article.authors.replaceAll("\n", ", "),
+    article.title,
+    "International Journal of Electro-Homoeopathy & Research",
+    article.issue
+      ? `${article.issue.year}; Volume ${article.issue.volumeNumber}, Issue ${article.issue.issueNumber}`
+      : null,
+    pageRange
+      ? `Pages ${pageRange}`
+      : null,
+    article.doi
+      ? `DOI: ${article.doi}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(". ");
+
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  const articleAuthors = article.authors
+    .split(/\n|;/)
+    .map((author) => author.trim())
+    .filter(Boolean);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+
+    headline: article.title,
+
+    name: article.title,
+
+    description:
+      article.abstractText,
+
     abstract:
-      "This study presents a structured phytochemical evaluation of selected medicinal plants associated with Electro-Homoeopathic research. The work focuses on documenting relevant plant constituents using appropriate laboratory methods and presenting the findings in a clear scientific format. The study is intended to support further experimental investigation and does not treat preliminary laboratory findings as equivalent to established clinical evidence.",
-    keywords: [
-      "Electro-Homoeopathy",
-      "Phytochemistry",
-      "Medicinal Plants",
-      "Pharmacognosy",
-      "Plant Extracts",
-      "Research",
-    ],
+      article.abstractText,
+
+    url:
+      `${siteUrl}/articles/${article.slug}`,
+
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id":
+        `${siteUrl}/articles/${article.slug}`,
+    },
+
+    author: articleAuthors.map(
+      (name) => ({
+        "@type": "Person",
+        name,
+      }),
+    ),
+
+    publisher: {
+      "@type": "Organization",
+
+      name:
+        "International Journal of Electro-Homoeopathy & Research",
+
+      url: siteUrl,
+    },
+
+    isPartOf: {
+      "@type": "Periodical",
+
+      name:
+        "International Journal of Electro-Homoeopathy & Research",
+
+      ...(article.issn
+        ? {
+            issn: article.issn,
+          }
+        : {}),
+    },
+
+    ...(article.articleType
+      ? {
+          articleSection:
+            article.articleType,
+        }
+      : {}),
+
+    keywords: article.keywords,
+
+    ...(article.publishedDate
+      ? {
+          datePublished:
+            article.publishedDate.toISOString(),
+        }
+      : article.issue?.publicationDate
+        ? {
+            datePublished:
+              article.issue.publicationDate.toISOString(),
+          }
+        : {}),
+
+    dateModified:
+      article.updatedAt.toISOString(),
+
+    ...(article.doi
+      ? {
+          identifier: {
+            "@type":
+              "PropertyValue",
+
+            propertyID: "DOI",
+
+            value: article.doi,
+          },
+
+          sameAs:
+            `https://doi.org/${article.doi}`,
+        }
+      : {}),
+
+    ...(pageRange
+      ? {
+          pagination:
+            pageRange,
+        }
+      : {}),
+
+    ...(article.issue
+      ? {
+          volumeNumber:
+            String(
+              article.issue.volumeNumber,
+            ),
+
+          issueNumber:
+            String(
+              article.issue.issueNumber,
+            ),
+        }
+      : {}),
   };
-
   return (
-    <main>
-      <section className="page-hero">
-        <div className="site-container">
-          <span className="eyebrow">
-            {article.type}
-          </span>
+    <main className="public-article-page">
+      <section className="article-public-hero">
+        <div className="article-public-container">
+          <div className="article-public-breadcrumb">
+            <Link href="/">
+              Home
+            </Link>
 
-          <h1
-            style={{
-              maxWidth: "980px",
-              fontSize: "clamp(38px, 5vw, 58px)",
-            }}
-          >
+            <span>›</span>
+
+            <Link href="/current-issue">
+              Current Issue
+            </Link>
+
+            <span>›</span>
+
+            <span>Article</span>
+          </div>
+
+          <div className="article-category-row">
+            <span>
+              {article.articleType}
+            </span>
+
+            {article.subjectArea && (
+              <span>
+                {article.subjectArea}
+              </span>
+            )}
+
+            {article.issue && (
+              <span>
+                Volume{" "}
+                {article.issue.volumeNumber},
+                Issue{" "}
+                {article.issue.issueNumber}
+              </span>
+            )}
+          </div>
+
+          <h1>
             {article.title}
           </h1>
 
-          <p>
-            Published in the International Journal of
-            Electro-Homoeopathy &amp; Research
+          <p className="article-public-authors">
+            {article.authors}
           </p>
         </div>
       </section>
 
-      <section className="section">
-        <div className="site-container">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) 320px",
-              gap: "80px",
-              alignItems: "start",
-            }}
-          >
-            <article>
-              <section
-                style={{
-                  paddingBottom: "34px",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Authors
-                </span>
+      <div className="article-public-container">
+        <div className="article-public-layout">
+          <div className="article-main-column">
+            <section className="article-public-card">
+              <span className="section-label">
+                Abstract
+              </span>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                    marginTop: "6px",
-                  }}
-                >
-                  {article.authors.map((author) => (
-                    <span
-                      key={author}
-                      style={{
-                        padding: "9px 14px",
-                        borderRadius: "999px",
-                        background: "var(--green-soft)",
-                        color: "var(--green-dark)",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                      }}
-                    >
-                      {author}
-                    </span>
-                  ))}
-                </div>
-              </section>
+              <h2>
+                Abstract
+              </h2>
 
-              <section
-                style={{
-                  padding: "34px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Affiliations
-                </span>
+              <p>
+                {article.abstractText}
+              </p>
+            </section>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "10px",
-                    marginTop: "8px",
-                    color: "var(--muted)",
-                  }}
-                >
-                  {article.affiliations.map((item) => (
-                    <p
-                      key={item}
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                      }}
-                    >
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              </section>
+            <section className="article-public-card">
+              <span className="section-label">
+                Keywords
+              </span>
 
-              <section
-                style={{
-                  padding: "48px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Abstract
-                </span>
+              <h2>
+                Keywords
+              </h2>
 
-                <h2
-                  style={{
-                    margin: "0 0 22px",
-                    fontSize: "34px",
-                  }}
-                >
-                  Abstract
-                </h2>
+              <div className="article-keywords">
+                {keywords.map((keyword) => (
+                  <span key={keyword}>
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </section>
 
-                <p
-                  style={{
-                    margin: 0,
-                    maxWidth: "840px",
-                    fontSize: "17px",
-                    lineHeight: 1.95,
-                    color: "var(--muted)",
-                  }}
-                >
-                  {article.abstract}
-                </p>
-              </section>
+            {article.introduction && (
+              <ArticleSection
+                label="Article"
+                title="Introduction"
+                content={
+                  article.introduction
+                }
+              />
+            )}
 
-              <section
-                style={{
-                  padding: "48px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Keywords
-                </span>
+            {article.methods && (
+              <ArticleSection
+                label="Article"
+                title="Materials & Methods"
+                content={
+                  article.methods
+                }
+              />
+            )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                    marginTop: "10px",
-                  }}
-                >
-                  {article.keywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      style={{
-                        padding: "10px 14px",
-                        border: "1px solid var(--border)",
-                        borderRadius: "10px",
-                        background: "#ffffff",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "var(--green-dark)",
-                      }}
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </section>
+            {article.results && (
+              <ArticleSection
+                label="Article"
+                title="Results"
+                content={
+                  article.results
+                }
+              />
+            )}
 
-              <section
-                style={{
-                  padding: "48px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Article Information
-                </span>
+            {article.discussion && (
+              <ArticleSection
+                label="Article"
+                title="Discussion"
+                content={
+                  article.discussion
+                }
+              />
+            )}
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                    gap: "18px",
-                    marginTop: "12px",
-                  }}
-                >
-                  <InfoBox
-                    label="Volume"
-                    value={article.volume}
+            {article.conclusion && (
+              <ArticleSection
+                label="Article"
+                title="Conclusion"
+                content={
+                  article.conclusion
+                }
+              />
+            )}
+
+            {article.acknowledgements && (
+              <ArticleSection
+                label="Declarations"
+                title="Acknowledgements"
+                content={
+                  article.acknowledgements
+                }
+              />
+            )}
+
+            {article.conflictOfInterest && (
+              <ArticleSection
+                label="Declarations"
+                title="Conflict of Interest"
+                content={
+                  article.conflictOfInterest
+                }
+              />
+            )}
+
+            {article.fundingStatement && (
+              <ArticleSection
+                label="Declarations"
+                title="Funding"
+                content={
+                  article.fundingStatement
+                }
+              />
+            )}
+
+            {article.ethicsStatement && (
+              <ArticleSection
+                label="Declarations"
+                title="Ethics Statement"
+                content={
+                  article.ethicsStatement
+                }
+              />
+            )}
+
+            {article.referencesText && (
+              <ArticleSection
+                label="References"
+                title="References"
+                content={
+                  article.referencesText
+                }
+              />
+            )}
+          </div>
+
+          <aside className="article-sidebar">
+            <section className="article-info-card">
+              <h3>
+                Article Information
+              </h3>
+
+              <div className="article-info-list">
+                <InfoItem
+                  label="Article Type"
+                  value={
+                    article.articleType
+                  }
+                />
+
+                {article.subjectArea && (
+                  <InfoItem
+                    label="Subject Area"
+                    value={
+                      article.subjectArea
+                    }
                   />
+                )}
 
-                  <InfoBox
+                {article.issue && (
+                  <InfoItem
                     label="Issue"
-                    value={article.issue}
+                    value={`Volume ${article.issue.volumeNumber}, Issue ${article.issue.issueNumber} (${article.issue.year})`}
                   />
+                )}
 
-                  <InfoBox
-                    label="Year"
-                    value={article.year}
-                  />
-
-                  <InfoBox
+                {pageRange && (
+                  <InfoItem
                     label="Pages"
-                    value={article.pages}
+                    value={pageRange}
                   />
+                )}
 
-                  <InfoBox
+                {article.receivedDate && (
+                  <InfoItem
+                    label="Received"
+                    value={formatDate(
+                      article.receivedDate,
+                    )}
+                  />
+                )}
+
+                {article.acceptedDate && (
+                  <InfoItem
+                    label="Accepted"
+                    value={formatDate(
+                      article.acceptedDate,
+                    )}
+                  />
+                )}
+
+                {article.publishedDate && (
+                  <InfoItem
+                    label="Published"
+                    value={formatDate(
+                      article.publishedDate,
+                    )}
+                  />
+                )}
+
+                {article.doi && (
+                  <InfoItem
                     label="DOI"
                     value={article.doi}
                   />
+                )}
 
-                  <InfoBox
-                    label="Article ID"
-                    value={slug}
+                {article.issn && (
+                  <InfoItem
+                    label="ISSN"
+                    value={article.issn}
                   />
-                </div>
-              </section>
+                )}
 
-              <section
-                style={{
-                  padding: "48px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Publication History
-                </span>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "18px",
-                    marginTop: "12px",
-                  }}
-                >
-                  <InfoRow
-                    label="Received"
-                    value={article.received}
+                {article.correspondingAuthor && (
+                  <InfoItem
+                    label="Corresponding Author"
+                    value={
+                      article.correspondingAuthor
+                    }
                   />
+                )}
 
-                  <InfoRow
-                    label="Accepted"
-                    value={article.accepted}
+                {article.correspondenceEmail && (
+                  <InfoItem
+                    label="Correspondence"
+                    value={
+                      article.correspondenceEmail
+                    }
                   />
+                )}
 
-                  <InfoRow
-                    label="Published"
-                    value={article.published}
+                {article.affiliations && (
+                  <InfoItem
+                    label="Affiliation"
+                    value={
+                      article.affiliations
+                    }
                   />
-                </div>
-              </section>
-
-              <section
-                style={{
-                  padding: "48px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
-                <span className="eyebrow">
-                  Citation
-                </span>
-
-                <div
-                  style={{
-                    marginTop: "12px",
-                    padding: "26px",
-                    borderRadius: "18px",
-                    background: "#f7faf8",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      lineHeight: 1.85,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    Researcher A, Scholar B, Investigator C.
-                    Phytochemical Profiling of Selected
-                    Medicinal Plants Used in
-                    Electro-Homoeopathy. International Journal
-                    of Electro-Homoeopathy &amp; Research.
-                    2026; 1(1): 01–10.
-                  </p>
-                </div>
-              </section>
-
-              <section
-                style={{
-                  padding: "48px 0 0",
-                }}
-              >
-                <span className="eyebrow">
-                  References
-                </span>
-
-                <h2
-                  style={{
-                    margin: "0 0 22px",
-                    fontSize: "34px",
-                  }}
-                >
-                  References
-                </h2>
-
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    lineHeight: 1.9,
-                  }}
-                >
-                  References will appear here when the final
-                  manuscript is uploaded and published.
-                </p>
-              </section>
-            </article>
-
-            <aside
-              style={{
-                position: "sticky",
-                top: "28px",
-                display: "grid",
-                gap: "22px",
-              }}
-            >
-              <div className="sidebar-card">
-                <span className="eyebrow">
-                  Article Access
-                </span>
-
-                <h3>
-                  Full Text
-                </h3>
-
-                <p>
-                  The final published PDF will be available here
-                  after publication.
-                </p>
-
-                <button
-                  type="button"
-                  disabled
-                  style={{
-                    width: "100%",
-                    minHeight: "48px",
-                    border: 0,
-                    borderRadius: "10px",
-                    background: "#dfe9e4",
-                    color: "#6b7c75",
-                    fontWeight: 700,
-                    cursor: "not-allowed",
-                  }}
-                >
-                  PDF Coming Soon
-                </button>
+                )}
               </div>
+            </section>
 
-              <div className="sidebar-card">
-                <span className="eyebrow">
-                  Issue
-                </span>
+            {article.pdfUrl && (
+              <a
+                href={`/api/articles/${article.slug}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-pdf-button"
+              >
+                Open Published PDF
+              </a>
+            )}
 
-                <h3>
-                  Volume 1, Issue 1
-                </h3>
+            <section className="article-citation-card">
+              <h3>
+                How to Cite
+              </h3>
 
-                <p>
-                  Browse the complete current issue of IJER.
-                </p>
-
-                <Link
-                  href="/current-issue"
-                  className="text-link"
-                >
-                  View Current Issue →
-                </Link>
-              </div>
-
-              <div className="sidebar-card">
-                <span className="eyebrow">
-                  Journal
-                </span>
-
-                <h3>
-                  IJER
-                </h3>
-
-                <p>
-                  International Journal of
-                  Electro-Homoeopathy &amp; Research
-                </p>
-
-                <Link
-                  href="/about"
-                  className="text-link"
-                >
-                  About the Journal →
-                </Link>
-              </div>
-            </aside>
-          </div>
+              <p>
+                {citation}.
+              </p>
+            </section>
+          </aside>
         </div>
-      </section>
+      </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(
+            /</g,
+            "\u003c",
+          ),
+        }}
+      />
+
+      <ArticleStyles />
     </main>
   );
 }
 
-function InfoBox({
+function ArticleSection({
+  label,
+  title,
+  content,
+}: {
+  label: string;
+  title: string;
+  content: string;
+}) {
+  return (
+    <section className="article-public-card">
+      <span className="section-label">
+        {label}
+      </span>
+
+      <h2>
+        {title}
+      </h2>
+
+      <p className="article-section-text">
+        {content}
+      </p>
+    </section>
+  );
+}
+
+function InfoItem({
   label,
   value,
 }: {
@@ -464,25 +728,8 @@ function InfoBox({
   value: string;
 }) {
   return (
-    <div
-      style={{
-        padding: "22px",
-        border: "1px solid var(--border)",
-        borderRadius: "14px",
-        background: "#ffffff",
-      }}
-    >
-      <span
-        style={{
-          display: "block",
-          marginBottom: "6px",
-          color: "var(--muted)",
-          fontSize: "12px",
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-        }}
-      >
+    <div className="article-info-item">
+      <span>
         {label}
       </span>
 
@@ -493,34 +740,17 @@ function InfoBox({
   );
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        gap: "30px",
-        paddingBottom: "16px",
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      <strong>
-        {label}
-      </strong>
-
-      <span
-        style={{
-          color: "var(--muted)",
-        }}
-      >
-        {value}
-      </span>
-    </div>
+function formatDate(
+  date: Date,
+) {
+  return new Date(
+    date,
+  ).toLocaleDateString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    },
   );
 }

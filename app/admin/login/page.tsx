@@ -1,15 +1,164 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  FormEvent,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 export default function AdminLoginPage() {
-  const [submitted, setSubmitted] = useState(false);
+  return (
+    <Suspense
+      fallback={
+        <main className="admin-login-page">
+          <div className="admin-login-loading">
+            Loading administrator login...
+          </div>
+        </main>
+      }
+    >
+      <AdminLoginContent />
+    </Suspense>
+  );
+}
+function AdminLoginContent() {
+  const router = useRouter();
+  const searchParams =
+    useSearchParams();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [loading, setLoading] =
+    useState(false);
+
+  const [checking, setChecking] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const response =
+          await fetch(
+            "/api/admin/auth/session",
+            {
+              cache: "no-store",
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          data.authenticated
+        ) {
+          router.replace(
+            "/admin/dashboard",
+          );
+          return;
+        }
+      } catch {
+        // Continue to login form.
+      }
+
+      setChecking(false);
+    }
+
+    checkSession();
+  }, [router]);
+
+  async function handleSubmit(
+    event:
+      FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
-    setSubmitted(true);
+
+    setLoading(true);
+    setError("");
+
+    const formData =
+      new FormData(
+        event.currentTarget,
+      );
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/auth/login",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              email: String(
+                formData.get(
+                  "adminEmail",
+                ) || "",
+              ),
+
+              password: String(
+                formData.get(
+                  "adminPassword",
+                ) || "",
+              ),
+            }),
+          },
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.message ||
+            "Unable to login.",
+        );
+      }
+
+      const destination =
+        searchParams.get("next") ||
+        "/admin/dashboard";
+
+      router.replace(
+        destination,
+      );
+
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to login.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (checking) {
+    return (
+      <main className="admin-login-page">
+        <div className="admin-login-loading">
+          Checking administrator session...
+        </div>
+
+        <Styles />
+      </main>
+    );
   }
 
   return (
@@ -19,359 +168,255 @@ export default function AdminLoginPage() {
           <div className="admin-logo-wrap">
             <Image
               src="/logo.png"
-              alt="International Journal of Electro-Homoeopathy & Research"
-              width={320}
-              height={320}
+              alt="IJER"
+              width={280}
+              height={280}
               priority
-              className="admin-logo-image"
             />
           </div>
 
-          <span className="eyebrow">Private Administration</span>
+          <span className="login-eyebrow">
+            Private Administration
+          </span>
 
-          <h1>Journal Administration</h1>
+          <h1>
+            Journal Administration
+          </h1>
 
           <p>
-            Secure administrative access for managing reviewed manuscripts,
-            published articles, journal issues, editorial-board members, and
-            website content.
+            Secure administrative access
+            for managing IJER manuscripts,
+            articles, issues and journal
+            information.
           </p>
-
-          <div className="admin-feature-list">
-            <div>
-              <strong>Manuscripts</strong>
-              <span>Review and manage received submissions</span>
-            </div>
-
-            <div>
-              <strong>Articles</strong>
-              <span>Upload approved research articles and PDFs</span>
-            </div>
-
-            <div>
-              <strong>Issues</strong>
-              <span>Create volumes, issues, and publication archives</span>
-            </div>
-
-            <div>
-              <strong>Editorial Board</strong>
-              <span>Add, edit, arrange, or deactivate board members</span>
-            </div>
-          </div>
         </section>
 
         <section className="admin-login-card">
-          <div className="admin-login-heading">
-            <span className="eyebrow">Authorized Access</span>
+          <span className="login-eyebrow">
+            Authorized Access
+          </span>
 
-            <h2>Admin Login</h2>
+          <h2>Admin Login</h2>
 
-            <p>
-              This area is intended only for authorized IJER administrators.
-            </p>
-          </div>
+          <p>
+            Sign in using your authorized
+            IJER administrator account.
+          </p>
 
-          {submitted && (
-            <div className="admin-demo-message">
-              The admin login interface is ready. Real secure authentication
-              will be connected when we set up the IJER database.
+          {error && (
+            <div className="login-error">
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="admin-field">
-              <label htmlFor="adminEmail">Admin Email</label>
+          <form
+            onSubmit={handleSubmit}
+          >
+            <label>
+              Admin Email
 
               <input
-                id="adminEmail"
                 name="adminEmail"
                 type="email"
-                placeholder="Enter admin email"
                 required
+                autoComplete="username"
               />
-            </div>
-
-            <div className="admin-field">
-              <label htmlFor="adminPassword">Password</label>
-
-              <input
-                id="adminPassword"
-                name="adminPassword"
-                type="password"
-                placeholder="Enter password"
-                required
-              />
-            </div>
-
-            <label className="admin-remember">
-              <input type="checkbox" />
-              <span>Remember this device</span>
             </label>
 
-            <button type="submit" className="admin-login-button">
-              Login to Admin
+            <label>
+              Password
+
+              <input
+                name="adminPassword"
+                type="password"
+                required
+                autoComplete="current-password"
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading}
+            >
+              {loading
+                ? "Signing in..."
+                : "Login to Admin"}
             </button>
           </form>
 
-          <div className="admin-security-note">
-            Public users cannot create administrator accounts. Admin access will
-            be created directly in the secure database.
-          </div>
-
-          <Link href="/" className="admin-back-link">
-            ← Return to Journal Website
+          <Link
+            href="/"
+            className="back-link"
+          >
+            ← Return to Journal
           </Link>
         </section>
       </div>
 
-      <style jsx global>{`
-        .admin-login-page {
-          min-height: 72vh;
-          padding: 90px 0 110px;
-          background:
-            radial-gradient(
-              circle at 14% 15%,
-              rgba(22, 103, 71, 0.12),
-              transparent 31%
-            ),
-            #f8fcfa;
-        }
-
-        .admin-login-shell {
-          width: min(1120px, calc(100% - 44px));
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 430px;
-          gap: 90px;
-          align-items: center;
-        }
-
-        .admin-login-info {
-          max-width: 610px;
-        }
-
-        .admin-logo-wrap {
-          width: 260px;
-          height: 260px;
-          margin-bottom: 38px;
-          padding: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          border-radius: 34px;
-          background: #ffffff;
-          box-shadow: 0 18px 50px rgba(31, 78, 60, 0.1);
-        }
-
-        .admin-logo-image {
-          width: 100%;
-          height: 100%;
-          display: block;
-          object-fit: contain;
-          object-position: center;
-          border-radius: 24px;
-        }
-
-        .admin-login-info h1 {
-          margin: 0;
-          font-size: clamp(46px, 6vw, 68px);
-          line-height: 1.05;
-          letter-spacing: -0.045em;
-        }
-
-        .admin-login-info > p {
-          max-width: 590px;
-          margin: 26px 0 38px;
-          color: var(--muted);
-          font-size: 18px;
-          line-height: 1.85;
-        }
-
-        .admin-feature-list {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 15px;
-        }
-
-        .admin-feature-list div {
-          padding: 20px;
-          border: 1px solid var(--border);
-          border-radius: 15px;
-          background: rgba(255, 255, 255, 0.76);
-        }
-
-        .admin-feature-list strong,
-        .admin-feature-list span {
-          display: block;
-        }
-
-        .admin-feature-list strong {
-          margin-bottom: 4px;
-          color: var(--green-dark);
-        }
-
-        .admin-feature-list span {
-          color: var(--muted);
-          font-size: 13px;
-          line-height: 1.6;
-        }
-
-        .admin-login-card {
-          padding: 42px;
-          border: 1px solid var(--border);
-          border-radius: 26px;
-          background: #ffffff;
-          box-shadow: 0 26px 75px rgba(31, 78, 60, 0.11);
-        }
-
-        .admin-login-heading {
-          margin-bottom: 30px;
-        }
-
-        .admin-login-heading h2 {
-          margin: 0 0 10px;
-          font-size: 34px;
-        }
-
-        .admin-login-heading p {
-          margin: 0;
-          color: var(--muted);
-          line-height: 1.7;
-        }
-
-        .admin-demo-message {
-          margin-bottom: 24px;
-          padding: 15px;
-          border: 1px solid #cfe2d8;
-          border-radius: 10px;
-          background: var(--green-soft);
-          color: var(--green-dark);
-          font-size: 14px;
-          line-height: 1.6;
-        }
-
-        .admin-field {
-          margin-bottom: 22px;
-        }
-
-        .admin-field label {
-          display: block;
-          margin-bottom: 8px;
-          font-size: 14px;
-          font-weight: 800;
-        }
-
-        .admin-field input {
-          width: 100%;
-          min-height: 52px;
-          padding: 12px 14px;
-          border: 1px solid #cbdad3;
-          border-radius: 11px;
-          outline: none;
-          color: var(--foreground);
-          font: inherit;
-        }
-
-        .admin-field input:focus {
-          border-color: var(--green);
-          box-shadow: 0 0 0 3px rgba(22, 103, 71, 0.1);
-        }
-
-        .admin-remember {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 24px;
-          color: var(--muted);
-          font-size: 14px;
-        }
-
-        .admin-remember input {
-          width: 17px;
-          height: 17px;
-          accent-color: var(--green);
-        }
-
-        .admin-login-button {
-          width: 100%;
-          min-height: 52px;
-          border: 0;
-          border-radius: 11px;
-          background: var(--green);
-          color: #ffffff;
-          font-size: 15px;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .admin-login-button:hover {
-          background: var(--green-dark);
-        }
-
-        .admin-security-note {
-          margin-top: 26px;
-          padding: 16px;
-          border-radius: 11px;
-          background: #f7faf8;
-          color: var(--muted);
-          font-size: 12px;
-          line-height: 1.7;
-          text-align: center;
-        }
-
-        .admin-back-link {
-          display: block;
-          margin-top: 24px;
-          text-align: center;
-          color: var(--green);
-          font-size: 14px;
-          font-weight: 800;
-        }
-
-        @media (max-width: 900px) {
-          .admin-login-shell {
-            grid-template-columns: 1fr;
-            gap: 55px;
-          }
-
-          .admin-login-info {
-            max-width: none;
-          }
-
-          .admin-login-card {
-            max-width: 560px;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .admin-login-page {
-            padding: 60px 0 80px;
-          }
-
-          .admin-login-shell {
-            width: min(100% - 28px, 1120px);
-          }
-
-          .admin-logo-wrap {
-            width: 210px;
-            height: 210px;
-            border-radius: 28px;
-          }
-
-          .admin-logo-image {
-            border-radius: 20px;
-          }
-
-          .admin-feature-list {
-            grid-template-columns: 1fr;
-          }
-
-          .admin-login-card {
-            padding: 30px 22px;
-          }
-        }
-      `}</style>
+      <Styles />
     </main>
+  );
+}
+
+function Styles() {
+  return (
+    <style jsx global>{`
+      .admin-login-page {
+        min-height: 100vh;
+        padding: 60px 25px;
+        display: grid;
+        place-items: center;
+        background: #f4f8f6;
+        color: #17382f;
+      }
+
+      .admin-login-shell {
+        width: min(1050px, 100%);
+        display: grid;
+        grid-template-columns:
+          minmax(0, 1fr)
+          minmax(360px, 430px);
+        overflow: hidden;
+        border: 1px solid #dce8e2;
+        border-radius: 26px;
+        background: white;
+        box-shadow:
+          0 25px 70px
+          rgba(20, 70, 52, 0.08);
+      }
+
+      .admin-login-info {
+        padding: 55px;
+        background: #0e503a;
+        color: white;
+      }
+
+      .admin-logo-wrap {
+        width: 125px;
+        height: 125px;
+        margin-bottom: 30px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border-radius: 20px;
+        background: white;
+      }
+
+      .admin-logo-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .login-eyebrow {
+        display: block;
+        margin-bottom: 10px;
+        color: #85c7ae;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .admin-login-info h1 {
+        margin: 0;
+        color: white;
+        font-size: 45px;
+        line-height: 1.1;
+      }
+
+      .admin-login-info p {
+        margin-top: 20px;
+        color: #d8ebe3;
+        line-height: 1.8;
+      }
+
+      .admin-login-card {
+        padding: 55px 45px;
+      }
+
+      .admin-login-card h2 {
+        margin: 0 0 10px;
+        font-size: 32px;
+      }
+
+      .admin-login-card > p {
+        margin: 0 0 28px;
+        color: #74867e;
+        line-height: 1.7;
+      }
+
+      .admin-login-card form {
+        display: grid;
+        gap: 20px;
+      }
+
+      .admin-login-card label {
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .admin-login-card input {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 14px;
+        border: 1px solid #cadbd3;
+        border-radius: 9px;
+        font: inherit;
+      }
+
+      .admin-login-card button {
+        min-height: 51px;
+        border: 0;
+        border-radius: 9px;
+        background: #176b4d;
+        color: white;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .admin-login-card button:disabled {
+        opacity: 0.6;
+      }
+
+      .login-error {
+        margin-bottom: 20px;
+        padding: 13px;
+        border-radius: 9px;
+        background: #fff0ef;
+        color: #a23e38;
+        font-weight: 700;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 25px;
+        color: #176b4d;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .admin-login-loading {
+        padding: 40px;
+        border-radius: 16px;
+        background: white;
+        color: #176b4d;
+        font-weight: 800;
+      }
+
+      @media (max-width: 800px) {
+        .admin-login-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .admin-login-info,
+        .admin-login-card {
+          padding: 35px 28px;
+        }
+      }
+    `}</style>
   );
 }

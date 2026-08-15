@@ -743,3 +743,196 @@ a {
     padding: 28px;
   }
 }
+/* =========================================================
+   IJER EDITORIAL BOARD
+   ========================================================= */
+
+.board-section {
+  margin-bottom: 95px;
+}
+
+.board-section-heading {
+  max-width: 780px;
+  margin-bottom: 38px;
+}
+
+.board-section-heading h2 {
+  margin: 0 0 15px;
+  font-size: clamp(31px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.board-section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.board-grid-featured {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 520px));
+}
+
+.member-card {
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.member-card-featured {
+  padding: 36px;
+}
+
+.member-avatar {
+  width: 66px;
+  height: 66px;
+  margin-bottom: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.member-card-featured .member-avatar {
+  width: 78px;
+  height: 78px;
+  font-size: 23px;
+}
+
+.member-role {
+  display: inline-block;
+  margin-bottom: 13px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.member-card h3 {
+  margin: 0 0 7px;
+  font-size: 22px;
+}
+
+.member-card-featured h3 {
+  font-size: 27px;
+}
+
+.member-qualification {
+  margin: 0 0 18px;
+  color: var(--green);
+  font-weight: 800;
+}
+
+.member-details {
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.member-details > strong {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.member-details > p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.member-specialty {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.member-specialty span,
+.member-specialty strong {
+  display: block;
+}
+
+.member-specialty span {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.member-specialty strong {
+  color: var(--green-dark);
+  line-height: 1.6;
+}
+
+.member-biography {
+  margin-top: 18px !important;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.75 !important;
+}
+
+.editorial-independence {
+  margin-top: 20px;
+  padding: 45px;
+  border: 1px solid #cfe2d8;
+  border-radius: 25px;
+  background: var(--green-soft);
+}
+
+.editorial-independence h2 {
+  margin: 0 0 17px;
+  font-size: 32px;
+}
+
+.editorial-independence p {
+  max-width: 880px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.board-empty {
+  padding: 70px 35px;
+  margin-bottom: 80px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.board-empty h2 {
+  margin: 0 0 12px;
+}
+
+.board-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .member-card,
+  .member-card-featured {
+    padding: 24px 20px;
+  }
+
+  .editorial-independence {
+    padding: 30px 23px;
+  }
+}

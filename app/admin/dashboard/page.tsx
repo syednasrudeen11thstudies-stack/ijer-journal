@@ -1,31 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const stats = [
-  {
-    value: "0",
-    label: "Received Manuscripts",
-    detail: "Awaiting your review",
-  },
-  {
-    value: "0",
-    label: "Published Articles",
-    detail: "Across all issues",
-  },
-  {
-    value: "0",
-    label: "Journal Issues",
-    detail: "Published volumes & issues",
-  },
-  {
-    value: "0",
-    label: "Editorial Members",
-    detail: "Active board members",
-  },
-];
 
+type CurrentAdmin = {
+  id: string;
+  name: string;
+  email: string;
+  role: "SUPER_ADMIN" | "ADMIN" | "EDITOR";
+  active: boolean;
+};
 const management = [
   {
     title: "Manuscripts",
@@ -33,7 +19,7 @@ const management = [
       "View manuscripts received from authors, review their details and manage their status.",
     href: "/admin/manuscripts",
     action: "Manage Manuscripts",
-    icon: "M",
+    icon: "M", roles: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
   },
   {
     title: "Articles",
@@ -41,7 +27,7 @@ const management = [
       "Add approved research articles, authors, abstracts, keywords, references and PDF files.",
     href: "/admin/articles",
     action: "Manage Articles",
-    icon: "A",
+    icon: "A", roles: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
   },
   {
     title: "Issues & Volumes",
@@ -49,7 +35,7 @@ const management = [
       "Create journal volumes and issues and assign approved articles for publication.",
     href: "/admin/issues",
     action: "Manage Issues",
-    icon: "I",
+    icon: "I", roles: ["SUPER_ADMIN", "ADMIN"],
   },
   {
     title: "Editorial Board",
@@ -57,7 +43,7 @@ const management = [
       "Add editors and advisory members, assign designations and control their display order.",
     href: "/admin/editorial-board",
     action: "Manage Board",
-    icon: "E",
+    icon: "E", roles: ["SUPER_ADMIN", "ADMIN"],
   },
   {
     title: "Journal Settings",
@@ -65,7 +51,7 @@ const management = [
       "Manage journal information, contact details, ISSN information and publication settings.",
     href: "/admin/settings",
     action: "Open Settings",
-    icon: "S",
+    icon: "S", roles: ["SUPER_ADMIN"],
   },
   {
     title: "Website",
@@ -73,11 +59,169 @@ const management = [
       "Return to the public IJER website and review published journal content.",
     href: "/",
     action: "View Website",
-    icon: "W",
+    icon: "W", roles: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
   },
 ];
 
 export default function AdminDashboardPage() {
+  const [currentAdmin, setCurrentAdmin] =
+    useState<CurrentAdmin | null>(null);
+
+  const [stats, setStats] = useState([
+    {
+      value: "0",
+      label: "Received Manuscripts",
+      detail: "Awaiting your review",
+    },
+    {
+      value: "0",
+      label: "Published Articles",
+      detail: "Across all issues",
+    },
+    {
+      value: "0",
+      label: "Journal Issues",
+      detail: "Published volumes & issues",
+    },
+    {
+      value: "0",
+      label: "Editorial Members",
+      detail: "Active board members",
+    },
+  ]);
+
+
+  useEffect(() => {
+    async function loadCurrentAdmin() {
+      try {
+        const response = await fetch(
+          "/api/admin/auth/me",
+          {
+            cache: "no-store",
+            credentials: "include",
+          },
+        );
+
+        const data = await response.json();
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.admin
+        ) {
+          window.location.replace(
+            "/admin/login",
+          );
+
+          return;
+        }
+
+        setCurrentAdmin(data.admin);
+      } catch (error) {
+        console.error(
+          "Unable to load administrator:",
+          error,
+        );
+
+        window.location.replace(
+          "/admin/login",
+        );
+      }
+    }
+
+    loadCurrentAdmin();
+  }, []);
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const response = await fetch(
+          "/api/admin/dashboard-stats",
+          {
+            cache: "no-store",
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          return;
+        }
+
+        setStats([
+          {
+            value: String(data.stats.receivedManuscripts ?? 0),
+            label: "Received Manuscripts",
+            detail: "Awaiting your review",
+          },
+          {
+            value: String(data.stats.publishedArticles ?? 0),
+            label: "Published Articles",
+            detail: "Across all issues",
+          },
+          {
+            value: String(data.stats.journalIssues ?? 0),
+            label: "Journal Issues",
+            detail: "Published volumes & issues",
+          },
+          {
+            value: String(data.stats.editorialMembers ?? 0),
+            label: "Editorial Members",
+            detail: "Active board members",
+          },
+        ]);
+      } catch (error) {
+        console.error(
+          "Unable to load dashboard statistics:",
+          error,
+        );
+      }
+    }
+
+    loadStats();
+  }, []);
+
+
+  const visibleManagement =
+    currentAdmin
+      ? management.filter((item) =>
+          item.roles.includes(
+            currentAdmin.role,
+          ),
+        )
+      : [];
+  async function handleLogout() {
+    try {
+      const response = await fetch(
+        "/api/admin/auth/logout",
+        {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to logout.",
+        );
+      }
+
+      window.location.replace(
+        "/admin/login",
+      );
+    } catch (error) {
+      console.error(
+        "Logout failed:",
+        error,
+      );
+
+      window.location.replace(
+        "/admin/login",
+      );
+    }
+  }
   return (
     <main className="dashboard-page">
       <header className="dashboard-header">
@@ -104,9 +248,13 @@ export default function AdminDashboardPage() {
               View Journal
             </Link>
 
-            <Link href="/admin/login" className="dashboard-logout">
+            <button
+              type="button"
+              className="dashboard-logout"
+              onClick={handleLogout}
+            >
               Logout
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -197,7 +345,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="management-grid">
-              {management.map((item) => (
+              {visibleManagement.map((item) => (
                 <article className="management-card" key={item.title}>
                   <div className="management-icon">
                     {item.icon}
@@ -857,7 +1005,9 @@ function WorkflowItem({
   title: string;
   text: string;
 }) {
-  return (
+
+
+    return (
     <div className="workflow-item">
       <span className="workflow-number">{number}</span>
       <h3>{title}</h3>

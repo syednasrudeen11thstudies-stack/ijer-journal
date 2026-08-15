@@ -67,6 +67,10 @@ export async function POST(request: Request) {
     const orcid = String(body.orcid || "").trim();
     const coAuthors = String(body.coAuthors || "").trim();
 
+    const manuscriptFileUrl = String(
+      body.manuscriptFileUrl || "",
+    ).trim();
+
     if (
       !title ||
       !articleType ||
@@ -74,12 +78,14 @@ export async function POST(request: Request) {
       !abstractText ||
       !keywords ||
       !correspondingAuthor ||
-      !email
+      !email ||
+      !manuscriptFileUrl
     ) {
       return NextResponse.json(
         {
           success: false,
-          message: "Please complete all required fields.",
+          message:
+            "Please complete all required fields and upload the manuscript file.",
         },
         {
           status: 400,
@@ -134,12 +140,11 @@ export async function POST(request: Request) {
         sequence,
       ).padStart(4, "0")}`;
 
-      const existing =
-        await prisma.manuscript.findUnique({
-          where: {
-            referenceNumber,
-          },
-        });
+      const existing = await prisma.manuscript.findUnique({
+        where: {
+          referenceNumber,
+        },
+      });
 
       if (existing) {
         sequence += 1;
@@ -188,6 +193,8 @@ export async function POST(request: Request) {
           coAuthors:
             coAuthors || null,
 
+          manuscriptFileUrl,
+
           originalWorkConfirmed: true,
 
           notSubmittedElsewhere: true,
@@ -214,7 +221,6 @@ export async function POST(request: Request) {
 
         manuscript: {
           id: manuscript.id,
-
           referenceNumber:
             manuscript.referenceNumber,
         },
