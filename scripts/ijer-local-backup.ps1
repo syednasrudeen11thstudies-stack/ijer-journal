@@ -1,127 +1,259 @@
 param(
-    [string]$BaseUrl = "http://localhost:3000",
+    [Parameter(Mandatory = $true)]
+    [string]$BaseUrl,
+
     [string]$BackupRoot = "E:\IJER BACKUP"
 )
 
 $ErrorActionPreference = "Stop"
 
-$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+function SafeName([string]$Value) {
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return "unknown"
+    }
 
-$backupFolder = Join-Path $BackupRoot $timestamp
-
-New-Item -ItemType Directory -Force -Path $backupFolder | Out-Null
-
-$databaseFolder = Join-Path $backupFolder "Database"
-$manuscriptFolder = Join-Path $backupFolder "Manuscripts"
-$articleFolder = Join-Path $backupFolder "Published Articles"
-
-New-Item -ItemType Directory -Force -Path $databaseFolder | Out-Null
-New-Item -ItemType Directory -Force -Path $manuscriptFolder | Out-Null
-New-Item -ItemType Directory -Force -Path $articleFolder | Out-Null
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "          IJER LOCAL BACKUP" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-
-Write-Host "Website: $BaseUrl"
-Write-Host "Backup:  $backupFolder"
-Write-Host ""
-
-Write-Host "IMPORTANT:" -ForegroundColor Yellow
-Write-Host "You must already be logged in as SUPER_ADMIN in your browser."
-Write-Host ""
-
-$sessionToken = Read-Host "Paste the value of your ijer_admin_session cookie"
-
-if ([string]::IsNullOrWhiteSpace($sessionToken)) {
-    throw "Admin session cookie is required."
+    return ($Value -replace '[\\/:*?"<>|]', '_')
 }
+
+$secretFile =
+    Join-Path $BackupRoot ".ijer-backup-secret"
+
+if (-not (Test-Path -LiteralPath $secretFile)) {
+    throw "Encrypted IJER backup secret not found."
+}
+
+$encrypted =
+    [System.IO.File]::ReadAllText($secretFile)
+
+$secure =
+    ConvertTo-SecureString $encrypted
+
+$credential =
+    New-Object System.Management.Automation.PSCredential(
+        "ijer-backup",
+        $secure
+    )
+
+$secret =
+    $credential.GetNetworkCredential().Password
+
+$BaseUrl =
+    $BaseUrl.TrimEnd("/")
+
+$timestamp =
+    Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+
+$backupFolder =
+    Join-Path $BackupRoot $timestamp
+
+$databaseFolder =
+    Join-Path $backupFolder "Database"
+
+$manuscriptFolder =
+    Join-Path $backupFolder "Manuscripts"
+
+$articleFolder =
+    Join-Path $backupFolder "Published Articles"
+
+$issueFolder =
+    Join-Path $backupFolder "Issues"
+
+$editorialFolder =
+    Join-Path $backupFolder "Editorial Board"
+
+$settingsFolder =
+    Join-Path $backupFolder "Journal Settings"
+
+foreach ($folder in @(
+    $backupFolder,
+    $databaseFolder,
+    $manuscriptFolder,
+    $articleFolder,
+    $issueFolder,
+    $editorialFolder,
+    $settingsFolder
+)) {
+    New-Item -ItemType Directory -Force -Path $folder | Out-Null
+}
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "           IJER LOCAL BACKUP" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "Source: $BaseUrl"
+Write-Host "Target: $backupFolder"
+Write-Host ""
 
 $headers = @{
-    Cookie = "ijer_admin_session=$sessionToken"
+    "x-ijer-backup-secret" = $secret
 }
 
-Write-Host ""
-Write-Host "Downloading journal database backup..." -ForegroundColor Cyan
+Write-Host "Downloading database export..." -ForegroundColor Cyan
 
-$backupUrl = "$BaseUrl/api/admin/backup"
-
-$response = Invoke-RestMethod `
-    -Uri $backupUrl `
-    -Headers $headers `
-    -Method Get
+$response =
+    Invoke-RestMethod `
+        -Uri "$BaseUrl/api/admin/backup" `
+        -Headers $headers `
+        -Method Get
 
 if (-not $response.success) {
-    throw "Backup API returned an error."
+    throw "Backup API failed."
 }
-
-$jsonPath = Join-Path $databaseFolder "ijer-database-backup.json"
 
 $response |
     ConvertTo-Json -Depth 100 |
-    Set-Content -LiteralPath $jsonPath -Encoding UTF8
-
-Write-Host "Database backup saved." -ForegroundColor Green
-
-$countPath = Join-Path $databaseFolder "backup-summary.txt"
+    Set-Content `
+        -LiteralPath (Join-Path $databaseFolder "ijer-database-backup.json") `
+        -Encoding UTF8
 
 @"
 IJER BACKUP SUMMARY
 
-Created: $($response.generatedAt)
+Created:
+$($response.generatedAt)
 
-Manuscripts: $($response.counts.manuscripts)
-Articles: $($response.counts.articles)
-Issues: $($response.counts.issues)
-Editorial Members: $($response.counts.editorialMembers)
+Manuscripts:
+$($response.counts.manuscripts)
+
+Published Articles:
+$($response.counts.articles)
+
+Issues:
+$($response.counts.issues)
+
+Editorial Members:
+$($response.counts.editorialMembers)
 "@ |
-Set-Content -LiteralPath $countPath -Encoding UTF8
+Set-Content `
+    -LiteralPath (Join-Path $databaseFolder "backup-summary.txt") `
+    -Encoding UTF8
+
+Write-Host "Database export saved." -ForegroundColor Green
+
+# ============================================================
+# MANUSCRIPTS
+# ============================================================
 
 Write-Host ""
-Write-Host "Saving manuscript metadata..." -ForegroundColor Cyan
+Write-Host "Saving manuscripts..." -ForegroundColor Cyan
 
 foreach ($manuscript in $response.data.manuscripts) {
 
-    $safeReference = $manuscript.referenceNumber -replace '[\\/:*?"<>|]', '_'
+    $reference =
+        SafeName $manuscript.referenceNumber
 
-    $folder = Join-Path $manuscriptFolder $safeReference
+    $folder =
+        Join-Path $manuscriptFolder $reference
 
     New-Item -ItemType Directory -Force -Path $folder | Out-Null
-
-    $metadataPath = Join-Path $folder "details.json"
 
     $manuscript |
         ConvertTo-Json -Depth 50 |
-        Set-Content -LiteralPath $metadataPath -Encoding UTF8
+        Set-Content `
+            -LiteralPath (Join-Path $folder "details.json") `
+            -Encoding UTF8
+
+    if ($manuscript.manuscriptFileUrl) {
+        try {
+            $extension =
+                [System.IO.Path]::GetExtension(
+                    ([uri]$manuscript.manuscriptFileUrl).AbsolutePath
+                )
+
+            if (-not $extension) {
+                $extension = ".bin"
+            }
+
+            $filePath =
+                Join-Path $folder "manuscript$extension"
+
+            Invoke-WebRequest `
+                -Uri $manuscript.manuscriptFileUrl `
+                -Headers $headers `
+                -OutFile $filePath
+        }
+        catch {
+            Write-Warning "Could not download manuscript file for $reference"
+        }
+    }
 }
 
-Write-Host "Manuscript metadata saved." -ForegroundColor Green
+# ============================================================
+# ARTICLES
+# ============================================================
 
-Write-Host ""
-Write-Host "Saving article metadata..." -ForegroundColor Cyan
+Write-Host "Saving published articles..." -ForegroundColor Cyan
 
 foreach ($article in $response.data.articles) {
 
-    $safeSlug = $article.slug -replace '[\\/:*?"<>|]', '_'
+    $slug =
+        SafeName $article.slug
 
-    $folder = Join-Path $articleFolder $safeSlug
+    $folder =
+        Join-Path $articleFolder $slug
 
     New-Item -ItemType Directory -Force -Path $folder | Out-Null
 
-    $metadataPath = Join-Path $folder "details.json"
-
     $article |
         ConvertTo-Json -Depth 50 |
-        Set-Content -LiteralPath $metadataPath -Encoding UTF8
+        Set-Content `
+            -LiteralPath (Join-Path $folder "details.json") `
+            -Encoding UTF8
+
+    if ($article.pdfUrl) {
+        try {
+            $filePath =
+                Join-Path $folder "article.pdf"
+
+            Invoke-WebRequest `
+                -Uri "$BaseUrl/api/articles/$($article.slug)/pdf" `
+                -Headers $headers `
+                -OutFile $filePath
+        }
+        catch {
+            Write-Warning "Could not download article PDF for $slug"
+        }
+    }
 }
 
-Write-Host "Article metadata saved." -ForegroundColor Green
+# ============================================================
+# ISSUES
+# ============================================================
+
+$response.data.issues |
+    ConvertTo-Json -Depth 50 |
+    Set-Content `
+        -LiteralPath (Join-Path $issueFolder "issues.json") `
+        -Encoding UTF8
+
+# ============================================================
+# EDITORIAL BOARD
+# ============================================================
+
+$response.data.editorialMembers |
+    ConvertTo-Json -Depth 50 |
+    Set-Content `
+        -LiteralPath (Join-Path $editorialFolder "editorial-board.json") `
+        -Encoding UTF8
+
+# ============================================================
+# SETTINGS
+# ============================================================
+
+$response.data.journalSettings |
+    ConvertTo-Json -Depth 50 |
+    Set-Content `
+        -LiteralPath (Join-Path $settingsFolder "journal-settings.json") `
+        -Encoding UTF8
+
+$secret = $null
 
 Write-Host ""
-Write-Host "BACKUP COMPLETED SUCCESSFULLY" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "     BACKUP COMPLETED SUCCESSFULLY" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Saved to:"
 Write-Host $backupFolder -ForegroundColor Yellow
 Write-Host ""
