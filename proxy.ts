@@ -364,8 +364,7 @@ export async function proxy(
 ) {
   if (
     request.nextUrl.pathname ===
-      "/api/admin/backup" &&
-    hasValidBackupSecret(request)
+    "/api/admin/backup"
   ) {
     return NextResponse.next();
   }
