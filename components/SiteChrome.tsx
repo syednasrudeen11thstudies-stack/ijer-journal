@@ -100,7 +100,7 @@ export default function SiteChrome({
 
   return (
     <>
-      <header className="site-header">
+      <header id="top" className="site-header">
         <div className="topbar">
           <div className="site-container topbar-inner">
             <span>
@@ -341,8 +341,80 @@ export default function SiteChrome({
         </div>
 
         <div className="footer-bottom">
-          <div className="site-container">
-            {copyright}
+          <div
+            className="site-container"
+            style={{
+              position: "relative",
+              paddingRight: "70px",
+            }}
+          >
+            <div>
+              {copyright}
+
+              <div
+                style={{
+                  marginTop: "10px",
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontSize: "13px",
+                  fontStyle: "italic",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Designed &amp; Developed by{" "}
+                <strong
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Syed Nasrudeen
+                </strong>
+
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "12px",
+                    fontStyle: "normal",
+                  }}
+                >
+                  <a
+                    href="mailto:syednasrudeen2802@gmail.com"
+                    style={{
+                      color: "inherit",
+                      textDecoration: "none",
+                    }}
+                  >
+                    syednasrudeen2802@gmail.com
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="#top"
+              aria-label="Back to top"
+              title="Back to top"
+              style={{
+                position: "absolute",
+                right: "0",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "42px",
+                height: "42px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "inherit",
+                textDecoration: "none",
+              }}
+            >
+              &#8593;
+            </a>
           </div>
         </div>
       </footer>
