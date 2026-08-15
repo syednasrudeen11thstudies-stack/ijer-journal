@@ -25,6 +25,24 @@ function getSecret() {
   );
 }
 
+
+function hasValidBackupSecret(
+  request: NextRequest,
+) {
+  const expected =
+    process.env.BACKUP_SYNC_SECRET;
+
+  const provided =
+    request.headers.get(
+      "x-ijer-backup-secret",
+    );
+
+  return Boolean(
+    expected &&
+    provided &&
+    provided === expected,
+  );
+}
 function isPublicRoute(
   request: NextRequest,
 ) {
@@ -344,6 +362,14 @@ function permissionDenied(
 export async function proxy(
   request: NextRequest,
 ) {
+  if (
+    request.nextUrl.pathname ===
+      "/api/admin/backup" &&
+    hasValidBackupSecret(request)
+  ) {
+    return NextResponse.next();
+  }
+
   if (isPublicRoute(request)) {
     return NextResponse.next();
   }
