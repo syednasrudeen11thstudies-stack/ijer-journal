@@ -22,12 +22,30 @@ const latestArticles = [
 ];
 
 const categories = [
-  "Electro-Homoeopathy Research",
-  "Phytochemistry",
-  "Medicinal Plants",
-  "Pharmacognosy",
-  "Clinical Research",
-  "Experimental Studies",
+  {
+    name: "Electro-Homoeopathy Research",
+    href: "/categories/electro-homoeopathy-research",
+  },
+  {
+    name: "Phytochemistry",
+    href: "/categories/phytochemistry",
+  },
+  {
+    name: "Medicinal Plants",
+    href: "/categories/medicinal-plants",
+  },
+  {
+    name: "Pharmacognosy",
+    href: "/categories/pharmacognosy",
+  },
+  {
+    name: "Clinical Research",
+    href: "/categories/clinical-research",
+  },
+  {
+    name: "Experimental Studies",
+    href: "/categories/experimental-studies",
+  },
 ];
 
 export default function Home() {
@@ -64,7 +82,7 @@ export default function Home() {
           <div className="hero-panel">
             <span className="panel-label">Current Issue</span>
 
-            <h2>Volume 1 Ã¢â‚¬Â¢ Issue 1</h2>
+            <h2>Volume 1 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Issue 1</h2>
 
             <p>
               Explore peer-reviewed research articles, reviews, case reports,
@@ -84,7 +102,7 @@ export default function Home() {
             </div>
 
             <Link href="/current-issue" className="text-link">
-              View Current Issue Ã¢â€ â€™
+              View Current Issue ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
             </Link>
           </div>
         </div>
@@ -108,11 +126,11 @@ export default function Home() {
           <div className="category-grid">
             {categories.map((category) => (
               <Link
-                href="/aims-and-scope"
-                key={category}
+                href={category.href}
+                key={category.name}
                 className="category-card"
               >
-                <span>{category}</span>
+                <span>{category.name}</span>
                 <span className="arrow">&rarr;</span>
               </Link>
             ))}
@@ -129,7 +147,7 @@ export default function Home() {
             </div>
 
             <Link href="/archives" className="text-link">
-              Browse all articles Ã¢â€ â€™
+              Browse all articles ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
             </Link>
           </div>
 
@@ -145,7 +163,7 @@ export default function Home() {
                 </div>
 
                 <Link href="/current-issue" className="article-link">
-                  Read Article Ã¢â€ â€™
+                  Read Article ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
                 </Link>
               </article>
             ))}
