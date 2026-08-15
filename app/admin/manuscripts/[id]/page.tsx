@@ -490,9 +490,7 @@ export default function ManuscriptDetailsPage({
               {manuscript.manuscriptFileUrl ? (
                 <a
                   className="document-button"
-                  href={
-                    manuscript.manuscriptFileUrl
-                  }
+                  href={`/api/manuscripts/${manuscript.id}/file`}
                   target="_blank"
                   rel="noreferrer"
                 >
