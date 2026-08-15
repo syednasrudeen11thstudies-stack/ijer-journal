@@ -7,20 +7,18 @@ export const dynamic = "force-dynamic";
 
 function isBackupSecretValid(request: Request) {
   const expected =
-    process.env.BACKUP_SYNC_SECRET;
+    process.env.BACKUP_SYNC_SECRET?.trim();
 
-  if (!expected) {
+  const provided =
+    request.headers
+      .get("x-ijer-backup-secret")
+      ?.trim();
+
+  if (!expected || !provided) {
     return false;
   }
 
-  const provided =
-    request.headers.get("x-ijer-backup-secret");
-
-  return Boolean(
-    provided &&
-      provided.length === expected.length &&
-      provided === expected,
-  );
+  return provided === expected;
 }
 
 export async function GET(request: Request) {
