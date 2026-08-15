@@ -96,7 +96,7 @@ export default function SiteChrome({
 
   const copyright =
     settings.copyrightText?.trim() ||
-    `© 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
+    `Â© 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
 
   return (
     <>
@@ -104,7 +104,7 @@ export default function SiteChrome({
         <div className="topbar">
           <div className="site-container topbar-inner">
             <span>
-              Academic • Peer Reviewed • Open Access
+              Academic â€¢ Peer Reviewed â€¢ Open Access
             </span>
 
             <div>
@@ -157,7 +157,7 @@ export default function SiteChrome({
               </strong>
 
               <span>
-                Research • Evidence • Scholarship
+                Research â€¢ Evidence â€¢ Scholarship
               </span>
 
               {(settings.issnPrint ||
@@ -174,7 +174,7 @@ export default function SiteChrome({
                     `Print ISSN: ${settings.issnPrint}`}
                   {settings.issnPrint &&
                     settings.issnOnline &&
-                    " • "}
+                    " â€¢ "}
                   {settings.issnOnline &&
                     `Online ISSN: ${settings.issnOnline}`}
                 </small>
@@ -343,6 +343,28 @@ export default function SiteChrome({
         <div className="footer-bottom">
           <div className="site-container">
             {copyright}
+
+            <div
+              style={{
+                marginTop: "10px",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: "13px",
+                fontStyle: "italic",
+                letterSpacing: "0.6px",
+                opacity: 0.85,
+              }}
+            >
+              Designed &amp; Developed by{" "}
+              <span
+                style={{
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Syed Nasrudeen
+              </span>
+            </div>
           </div>
         </div>
       </footer>
