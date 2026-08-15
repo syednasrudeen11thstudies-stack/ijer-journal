@@ -96,7 +96,7 @@ export default function SiteChrome({
 
   const copyright =
     settings.copyrightText?.trim() ||
-    `Ã‚Â© 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
+    `ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€š&copy; 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
 
   return (
     <>
@@ -104,7 +104,7 @@ export default function SiteChrome({
         <div className="topbar">
           <div className="site-container topbar-inner">
             <span>
-              Academic Ã¢â‚¬Â¢ Peer Reviewed Ã¢â‚¬Â¢ Open Access
+              Academic ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Peer Reviewed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Open Access
             </span>
 
             <div>
@@ -157,7 +157,7 @@ export default function SiteChrome({
               </strong>
 
               <span>
-                Research Ã¢â‚¬Â¢ Evidence Ã¢â‚¬Â¢ Scholarship
+                Research ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Evidence ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Scholarship
               </span>
 
               {(settings.issnPrint ||
@@ -174,7 +174,7 @@ export default function SiteChrome({
                     `Print ISSN: ${settings.issnPrint}`}
                   {settings.issnPrint &&
                     settings.issnOnline &&
-                    " Ã¢â‚¬Â¢ "}
+                    " ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ "}
                   {settings.issnOnline &&
                     `Online ISSN: ${settings.issnOnline}`}
                 </small>
