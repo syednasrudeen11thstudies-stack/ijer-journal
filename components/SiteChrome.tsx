@@ -96,7 +96,7 @@ export default function SiteChrome({
 
   const copyright =
     settings.copyrightText?.trim() ||
-    `Â© 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
+    `Ã‚Â© 2026 ${settings.journalName} (${settings.abbreviation}). All rights reserved.`;
 
   return (
     <>
@@ -104,7 +104,7 @@ export default function SiteChrome({
         <div className="topbar">
           <div className="site-container topbar-inner">
             <span>
-              Academic â€¢ Peer Reviewed â€¢ Open Access
+              Academic Ã¢â‚¬Â¢ Peer Reviewed Ã¢â‚¬Â¢ Open Access
             </span>
 
             <div>
@@ -157,7 +157,7 @@ export default function SiteChrome({
               </strong>
 
               <span>
-                Research â€¢ Evidence â€¢ Scholarship
+                Research Ã¢â‚¬Â¢ Evidence Ã¢â‚¬Â¢ Scholarship
               </span>
 
               {(settings.issnPrint ||
@@ -174,7 +174,7 @@ export default function SiteChrome({
                     `Print ISSN: ${settings.issnPrint}`}
                   {settings.issnPrint &&
                     settings.issnOnline &&
-                    " â€¢ "}
+                    " Ã¢â‚¬Â¢ "}
                   {settings.issnOnline &&
                     `Online ISSN: ${settings.issnOnline}`}
                 </small>
@@ -364,6 +364,26 @@ export default function SiteChrome({
               >
                 Syed Nasrudeen
               </span>
+
+              <div
+                style={{
+                  marginTop: "5px",
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  letterSpacing: "0.3px",
+                }}
+              >
+                <a
+                  href="mailto:syednasrudeen2802@gmail.com"
+                  style={{
+                    color: "inherit",
+                    textDecoration: "none",
+                  }}
+                >
+                  syednasrudeen2802@gmail.com
+                </a>
+              </div>
             </div>
           </div>
         </div>
