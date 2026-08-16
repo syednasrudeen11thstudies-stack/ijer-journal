@@ -82,7 +82,7 @@ export default function Home() {
           <div className="hero-panel">
             <span className="panel-label">Current Issue</span>
 
-            <h2>Volume 1 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Issue 1</h2>
+            <h2>Volume 1 &bull; Issue 1</h2>
 
             <p>
               Explore peer-reviewed research articles, reviews, case reports,
@@ -102,7 +102,7 @@ export default function Home() {
             </div>
 
             <Link href="/current-issue" className="text-link">
-              View Current Issue ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+              View Current Issue &rarr;
             </Link>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function Home() {
             </div>
 
             <Link href="/archives" className="text-link">
-              Browse all articles ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+              Browse all articles &rarr;
             </Link>
           </div>
 
@@ -163,7 +163,7 @@ export default function Home() {
                 </div>
 
                 <Link href="/current-issue" className="article-link">
-                  Read Article ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                  Read Article &rarr;
                 </Link>
               </article>
             ))}
