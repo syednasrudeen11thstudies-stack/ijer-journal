@@ -346,7 +346,6 @@ export default function SiteChrome({
             </Link>
           </div>
           </div>
-        </div>
 
         <div className="footer-bottom">
           <div
