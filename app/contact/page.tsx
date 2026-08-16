@@ -1,21 +1,4 @@
-import { prisma } from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
-
-export default async function ContactPage() {
-  const settings =
-    await prisma.journalSettings.findFirst();
-
-  const address = [
-    settings?.address,
-    settings?.city,
-    settings?.state,
-    settings?.postalCode,
-    settings?.country,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
+﻿export default function ContactPage() {
   return (
     <main>
       <section className="page-hero">
@@ -38,44 +21,41 @@ export default async function ContactPage() {
           <section className="content-section">
             <h2>Editorial Office</h2>
 
-            {settings?.publisherName && (
-              <p>
-                <strong>Publisher:</strong>{" "}
-                {settings.publisherName}
-              </p>
-            )}
+            <p>
+              <strong>Journal:</strong>{" "}
+              International Journal of Electro-Homoeopathy &amp; Research (IJER)
+            </p>
 
-            {settings?.email && (
-              <p>
-                <strong>Email:</strong>{" "}
-                <a href={`mailto:${settings.email}`}>
-                  {settings.email}
-                </a>
-              </p>
-            )}
+            <p>
+              <strong>Email:</strong>{" "}
+              <a href="mailto:drbenazir1326@gmail.com">
+                drbenazir1326@gmail.com
+              </a>
+            </p>
 
-            {settings?.phone && (
-              <p>
-                <strong>Phone:</strong>{" "}
-                <a href={`tel:${settings.phone}`}>
-                  {settings.phone}
-                </a>
-              </p>
-            )}
+            <p>
+              <strong>Phone:</strong>{" "}
+              <a href="tel:+919629934590">
+                +91 9629934590
+              </a>
+            </p>
 
-            {address && (
-              <p>
-                <strong>Address:</strong>{" "}
-                {address}
-              </p>
-            )}
+            <p>
+              <strong>Address:</strong>{" "}
+              21, Thiruvalluvar Street, Manavalanagar,
+              Tiruvallur - 602002, Tamil Nadu, India
+            </p>
 
-            {settings?.websiteUrl && (
-              <p>
-                <strong>Website:</strong>{" "}
-                {settings.websiteUrl}
-              </p>
-            )}
+            <p>
+              <strong>Website:</strong>{" "}
+              <a
+                href="https://www.ijer.online"
+                target="_blank"
+                rel="noreferrer"
+              >
+                www.ijer.online
+              </a>
+            </p>
           </section>
 
           <section className="content-section highlight-box">
@@ -84,7 +64,7 @@ export default async function ContactPage() {
             </span>
 
             <h2>
-              Manuscript & Editorial Enquiries
+              Manuscript &amp; Editorial Enquiries
             </h2>
 
             <p>

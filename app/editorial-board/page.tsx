@@ -333,6 +333,15 @@ function MemberCard({
           </p>
         )}
 
+        {member.email && (
+          <p>
+            <strong>Email: </strong>
+            <a href={`mailto:${member.email}`}>
+              {member.email}
+            </a>
+          </p>
+        )}
+
         {member.specialty && (
           <div className="member-specialty">
             <span>
