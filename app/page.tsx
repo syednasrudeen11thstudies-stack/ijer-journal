@@ -1,25 +1,5 @@
 import Link from "next/link";
-
-const latestArticles = [
-  {
-    type: "Original Research",
-    title:
-      "Phytochemical Profiling of Selected Electro-Homoeopathic Medicinal Plants",
-    authors: "A. Researcher, B. Scholar, C. Investigator",
-  },
-  {
-    type: "Review Article",
-    title:
-      "Current Perspectives on Plant-Derived Bioactive Compounds in Electro-Homoeopathy",
-    authors: "D. Author, E. Scientist",
-  },
-  {
-    type: "Experimental Study",
-    title:
-      "In-Vitro Evaluation of Selected Botanical Extracts Against Microbial Pathogens",
-    authors: "F. Researcher, G. Scholar",
-  },
-];
+import { prisma } from "@/lib/prisma";
 
 const categories = [
   {
@@ -48,7 +28,28 @@ const categories = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const latestArticles = await prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+    },
+    orderBy: [
+      {
+        publishedDate: "desc",
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+    take: 3,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      articleType: true,
+      authors: true,
+    },
+  });
   return (
     <main>
       <section className="hero-section">
@@ -155,7 +156,7 @@ export default function Home() {
             {latestArticles.map((article) => (
               <article key={article.title} className="article-card">
                 <div>
-                  <span className="article-type">{article.type}</span>
+                  <span className="article-type">{article.articleType}</span>
 
                   <h3>{article.title}</h3>
 
