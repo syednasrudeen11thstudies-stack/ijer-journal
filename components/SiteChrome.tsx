@@ -318,25 +318,33 @@ export default function SiteChrome({
               Publication Ethics
             </Link>
           </div>
-
           <div>
             <h4>Contact</h4>
 
-            {settings.email && (
-              <a href={`mailto:${settings.email}`}>
-                {settings.email}
-              </a>
-            )}
+            <a href="tel:+919629934590">
+              +91 9629934590
+            </a>
 
-            {settings.phone && (
-              <a href={`tel:${settings.phone}`}>
-                {settings.phone}
-              </a>
-            )}
+            <a href="mailto:drbenazir1326@gmail.com">
+              drbenazir1326@gmail.com
+            </a>
+
+            <p
+              style={{
+                margin: "0",
+                lineHeight: "1.7",
+                maxWidth: "280px",
+              }}
+            >
+              21, Thiruvalluvar Street,
+              <br />
+              Manavalanagar, Tiruvallur - 602002
+            </p>
 
             <Link href="/contact">
               Contact Page
             </Link>
+          </div>
           </div>
         </div>
 
